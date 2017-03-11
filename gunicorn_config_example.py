@@ -11,8 +11,6 @@ bind = ['127.0.0.1:8000']
 workers = os.cpu_count()
 
 # Server mechanics
-daemon = True
-chdir = str(Path(__file__).resolve())
 pidfile = 'gunicorn.pid'
 
 # Logging

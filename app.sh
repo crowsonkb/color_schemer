@@ -28,4 +28,4 @@ if [[ ! -f gunicorn_config.py ]]; then
   cp gunicorn_config_example.py gunicorn_config.py
 fi
 
-gunicorn -c gunicorn_config.py app:app
+gunicorn --config gunicorn_config.py --daemon app:app
