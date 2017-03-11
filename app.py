@@ -4,7 +4,8 @@ from functools import partial
 
 import flask
 import numpy as np
-from werkzeug.exceptions import HTTP_STATUS_CODES, HTTPException, InternalServerError
+from werkzeug.exceptions import (HTTP_STATUS_CODES,
+                                 HTTPException, InternalServerError, TooManyRequests)
 
 import cam
 from color_io import color_to_decimal, color_to_hex, parse_color
@@ -14,6 +15,7 @@ app = flask.Flask(__name__)
 
 @app.errorhandler(404)
 @app.errorhandler(405)
+@app.errorhandler(429)
 @app.errorhandler(500)
 def handle_error(err):
     if isinstance(err, HTTPException):
@@ -50,12 +52,12 @@ def result():
 
     inputs_txt, inputs, outputs_txt = [], [], []
     for color in form['colors'].split('\n'):
-        if len(inputs_txt) == 256:
-            raise InternalServerError('Limit 256 colors per request.')
         if not color.strip():
             continue
         try:
             inputs_txt.append(color)
+            if len(inputs_txt) > 256:
+                raise TooManyRequests('Limit 256 colors per request.')
             rgb_src = parse_color(color)
         except ValueError as err:
             raise InternalServerError(str(err))
