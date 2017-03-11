@@ -21,6 +21,10 @@ else
   source venv/bin/activate
 fi
 
+if [[ ! -d run ]]; then
+  mkdir -m 700 run
+fi
+
 echo "Starting uWSGI..."
 if [[ ! -f uwsgi.ini ]]; then
   cp uwsgi_example.ini uwsgi.ini
