@@ -65,8 +65,10 @@ def result():
 
     if form['direction'] == 'to_dark':
         translate_fn = partial(cam.translate, bg_src=light, bg_dst=dark)
+        left_bg, right_bg = '#fff', '#000'
     elif form['direction'] == 'to_light':
         translate_fn = partial(cam.translate, bg_src=dark, bg_dst=light)
+        left_bg, right_bg = '#000', '#fff'
     else:
         raise ValueError('Translation direction not specified')
     translate_fn = partial(translate_fn, J_factor=J_factor, C_factor=C_factor)
@@ -80,4 +82,5 @@ def result():
         else:
             outputs.append((color_to_hex(rgb_src), color_to_hex(rgb_dst)))
 
-    return flask.render_template('result.html', outputs=outputs)
+    return flask.render_template('result.html',
+                                 left_bg=left_bg, right_bg=right_bg, outputs=outputs)

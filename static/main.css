@@ -26,6 +26,10 @@ td {
     text-align: right;
 }
 
+td.demo {
+    padding: 4px 24px;
+}
+
 textarea {
     font-family: SF Mono, Consolas, monospace;
     font-size: 80%;
