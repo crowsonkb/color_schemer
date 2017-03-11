@@ -1,52 +1,21 @@
 """A web application to translate color schemes between dark- and light-background."""
 
 from functools import partial
-import re
 
 import flask
+from werkzeug.exceptions import HTTP_STATUS_CODES, InternalServerError
 
 import cam
+from color_io import color_to_decimal, color_to_hex, parse_color
 
 app = flask.Flask(__name__)
 
 
-def parse_hex_color(color):
-    """Parses a hex format color string, i.e. #ccc or #12ab34, into an (r, g, b) tuple."""
-    color = color.strip('#')
-    if len(color) == 3:
-        color = ''.join(ch*2 for ch in color)
-    if len(color) == 6:
-        r = int(color[0:2], base=16) / 255
-        g = int(color[2:4], base=16) / 255
-        b = int(color[4:6], base=16) / 255
-        return (r, g, b)
-    else:
-        raise ValueError('Could not parse hex format color')
-
-
-def parse_color(color):
-    """Parses a color string (i.e. #12ab34 or rgb(130, 12, 24)) into an (r, g, b) tuple."""
-    components = color.split(',')
-    if len(components) == 1:
-        return parse_hex_color(color.strip())
-    if len(components) != 3:
-        raise ValueError('Could not parse decimal format color')
-    return tuple(float(re.search(r'([\d.]+)', c).group(1)) / 255 for c in components)
-
-
-def color_to_int(rgb):
-    """Converts a color from floating point range 0-1 to integer range 0-255."""
-    return tuple(int(round(c * 255)) for c in rgb)
-
-
-def color_to_decimal(rgb):
-    """Stringifies a color using the CSS RGB color format."""
-    return 'rgb(%d, %d, %d)' % color_to_int(rgb)
-
-
-def color_to_hex(rgb):
-    """Stringifies a color using the CSS hex color format."""
-    return '#%02x%02x%02x' % color_to_int(rgb)
+@app.errorhandler(404)
+@app.errorhandler(500)
+def handle_error(err):
+    context = dict(code=err.code, reason=HTTP_STATUS_CODES[err.code], message=err.description)
+    return flask.render_template('error.html', **context), err.code
 
 
 @app.route('/')
@@ -70,12 +39,15 @@ def result():
         translate_fn = partial(cam.translate, bg_src=dark, bg_dst=light)
         left_bg, right_bg = '#000', '#fff'
     else:
-        raise ValueError('Translation direction not specified')
+        raise InternalServerError('Translation direction not specified.')
     translate_fn = partial(translate_fn, J_factor=J_factor, C_factor=C_factor)
 
     outputs = []
     for color in form['colors'].split('\n'):
-        rgb_src = parse_color(color)
+        try:
+            rgb_src = parse_color(color)
+        except ValueError as err:
+            raise InternalServerError(str(err))
         rgb_dst = translate_fn(rgb_src)
         if color.count(','):
             outputs.append((color_to_decimal(rgb_src), color_to_decimal(rgb_dst)))
