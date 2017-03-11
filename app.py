@@ -1,5 +1,6 @@
 """A web application to translate color schemes between dark- and light-background."""
 
+from functools import partial
 import re
 
 import flask
@@ -59,12 +60,24 @@ def result():
     """Renders the result page."""
     dark, light = [0.2]*3, [0.8]*3
     form = flask.request.form
-    rgb_src = parse_color(form['color'])
+
     J_factor, C_factor = float(form['J_factor']), float(form['C_factor'])
+
     if form['direction'] == 'to_dark':
-        rgb_dst = cam.translate(rgb_src, light, dark, J_factor=J_factor, C_factor=C_factor)
+        translate_fn = partial(cam.translate, bg_src=light, bg_dst=dark)
     elif form['direction'] == 'to_light':
-        rgb_dst = cam.translate(rgb_src, dark, light, J_factor=J_factor, C_factor=C_factor)
+        translate_fn = partial(cam.translate, bg_src=dark, bg_dst=light)
     else:
         raise ValueError('Translation direction not specified')
-    return color_to_hex(rgb_dst)
+    translate_fn = partial(translate_fn, J_factor=J_factor, C_factor=C_factor)
+
+    outputs = []
+    for color in form['colors'].split('\n'):
+        rgb_src = parse_color(color)
+        rgb_dst = translate_fn(rgb_src)
+        if color.count(','):
+            outputs.append((color_to_decimal(rgb_src), color_to_decimal(rgb_dst)))
+        else:
+            outputs.append((color_to_hex(rgb_src), color_to_hex(rgb_dst)))
+
+    return flask.render_template('result.html', outputs=outputs)

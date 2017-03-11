@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Color scheme translation{% endblock %}
+
+{% block content %}
+    <h1>Your translated color scheme:</h1>
+    <table>
+        {% for output in outputs %}
+            <tr>
+                <td>{{output[0]}}
+                <td> →
+                <td>{{output[1]}}
+        {% endfor %}
+    </table><br>
+    <a href=".">Back</a>
+{% endblock %}

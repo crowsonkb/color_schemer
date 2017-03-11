@@ -5,7 +5,8 @@
 {% block content %}
     <h1>Color scheme translation</h1>
     <form action="result" method="post">
-        Enter a color: <input type="text" name="color"><br>
+        Enter a list of CSS hex or RGB colors:<br>
+        <textarea name="colors" cols="20" rows="5"></textarea><br>
         <input type="radio" name="direction" value="to_dark" checked>Light to dark
         <input type="radio" name="direction" value="to_light">Dark to light<br>
         <br>
@@ -15,7 +16,7 @@
                 <td><input type="number" step="0.01" name="J_factor" value="1">
             <tr>
                 <td>Scale output chroma by:
-                <td><input type="number" step="0.01"  name="C_factor" value="1">
+                <td><input type="number" step="0.01" name="C_factor" value="1">
             </table>
             <br>
             <input type="submit" value="Submit">

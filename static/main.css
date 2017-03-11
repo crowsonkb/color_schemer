@@ -1,3 +1,7 @@
+a:link, a:visited, a:hover, a:active {
+    color: rgb(59, 59, 59);  /* 20% of 20% gray */
+}
+
 body {
     background-color: rgb(123, 123, 123);  /* 20% gray */
     color: rgb(255, 255, 255);
@@ -20,4 +24,10 @@ input[type="radio"], input[type="text"] {
 
 td {
     text-align: right;
+}
+
+textarea {
+    font-family: SF Mono, Consolas, monospace;
+    font-size: 80%;
+    line-height: 1.4;
 }
