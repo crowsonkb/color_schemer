@@ -2,8 +2,11 @@
 
 set -e
 
-COLUMNS=$(tput cols)
 wrap () {
+  COLUMNS=80
+  if [[ -n $(tput cols) ]]; then
+    COLUMNS=$(tput cols)
+  fi
   echo "$@" | fmt -w $((COLUMNS - 5))
 }
 
