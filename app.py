@@ -3,7 +3,7 @@
 from functools import partial
 
 import flask
-from werkzeug.exceptions import HTTP_STATUS_CODES, InternalServerError
+from werkzeug.exceptions import HTTP_STATUS_CODES, HTTPException, InternalServerError
 
 import cam
 from color_io import color_to_decimal, color_to_hex, parse_color
@@ -12,10 +12,15 @@ app = flask.Flask(__name__)
 
 
 @app.errorhandler(404)
+@app.errorhandler(405)
 @app.errorhandler(500)
 def handle_error(err):
-    context = dict(code=err.code, reason=HTTP_STATUS_CODES[err.code], message=err.description)
-    return flask.render_template('error.html', **context), err.code
+    if isinstance(err, HTTPException):
+        code, desc = err.code, err.description
+    else:
+        code, desc = 500, '%s: %s' % (err.__class__.__name__, err)
+    context = dict(code=code, reason=HTTP_STATUS_CODES[code], message=desc)
+    return flask.render_template('error.html', **context), code
 
 
 @app.route('/')
