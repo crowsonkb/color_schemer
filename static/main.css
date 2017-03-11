@@ -1,0 +1,10 @@
+body {
+    background-color: rgb(123, 123, 123);  /* 20% gray */
+    color: rgb(255, 255, 255);
+    font-family: "SF UI Text", "Lucida Grande", Helvetica, Arial, sans-serif;
+    line-height: 1.25;
+}
+
+#content {
+    margin: 16px;
+}
