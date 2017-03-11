@@ -22,9 +22,8 @@ else
 fi
 
 echo "Starting uWSGI..."
-UWSGI_INI=uwsgi.ini
-if [[ ! -f $UWSGI_INI ]]; then
-  UWSGI_INI="uwsgi_example.ini"
+if [[ ! -f uwsgi.ini ]]; then
+  cp uwsgi_example.ini uwsgi.ini
 fi
 
-uwsgi --ini "$UWSGI_INI" "$@"
+uwsgi --ini uwsgi.ini "$@"
