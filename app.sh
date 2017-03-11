@@ -2,8 +2,8 @@
 
 set -e
 
-COLUMNS=$(tput cols)
 wrap () {
+  COLUMNS=$(tput cols || echo 80)
   echo "$@" | fmt -w $((COLUMNS - 5))
 }
 
@@ -21,13 +21,11 @@ else
   source venv/bin/activate
 fi
 
-if [[ ! -d run ]]; then
-  mkdir -m 700 run
-fi
-
 echo "Starting uWSGI..."
 if [[ ! -f uwsgi.ini ]]; then
   cp uwsgi_example.ini uwsgi.ini
 fi
 
-exec uwsgi --ini uwsgi.ini "$@"
+set +e
+uwsgi --ini uwsgi.ini "$@"
+rm -f uwsgi.fifo uwsgi.pid
