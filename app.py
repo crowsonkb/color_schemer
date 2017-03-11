@@ -3,6 +3,7 @@
 from functools import partial
 
 import flask
+import numpy as np
 from werkzeug.exceptions import HTTP_STATUS_CODES, HTTPException, InternalServerError
 
 import cam
@@ -47,21 +48,27 @@ def result():
         raise InternalServerError('Translation direction not specified.')
     translate_fn = partial(translate_fn, J_factor=J_factor, C_factor=C_factor)
 
-    outputs = []
+    inputs_txt, inputs, outputs_txt = [], [], []
     for color in form['colors'].split('\n'):
-        if len(outputs) == 256:
-            break
+        if len(inputs_txt) == 256:
+            raise InternalServerError('Limit 256 colors per request.')
         if not color.strip():
             continue
         try:
+            inputs_txt.append(color)
             rgb_src = parse_color(color)
         except ValueError as err:
             raise InternalServerError(str(err))
-        rgb_dst = translate_fn(rgb_src)
+        inputs.append(rgb_src)
+
+    inputs_arr = np.stack(inputs)
+    outputs_arr = translate_fn(inputs_arr)
+
+    for i, color in enumerate(inputs_txt):
         if color.count(','):
-            outputs.append((color_to_decimal(rgb_src), color_to_decimal(rgb_dst)))
+            outputs_txt.append((color_to_decimal(inputs_arr[i]), color_to_decimal(outputs_arr[i])))
         else:
-            outputs.append((color_to_hex(rgb_src), color_to_hex(rgb_dst)))
+            outputs_txt.append((color_to_hex(inputs_arr[i]), color_to_hex(outputs_arr[i])))
 
     return flask.render_template('result.html',
-                                 left_bg=left_bg, right_bg=right_bg, outputs=outputs)
+                                 left_bg=left_bg, right_bg=right_bg, outputs=outputs_txt)
