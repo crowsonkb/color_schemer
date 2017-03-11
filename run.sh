@@ -2,7 +2,7 @@
 
 set -e
 
-COLUMNS=$(tput co)
+COLUMNS=$(tput cols)
 wrap () {
   echo "$@" | fmt -w $((COLUMNS - 5))
 }
