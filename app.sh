@@ -3,10 +3,7 @@
 set -e
 
 wrap () {
-  COLUMNS=80
-  if [[ -n $(tput cols) ]]; then
-    COLUMNS=$(tput cols)
-  fi
+  COLUMNS=$(tput cols || echo 80)
   echo "$@" | fmt -w $((COLUMNS - 5))
 }
 
@@ -31,4 +28,4 @@ if [[ ! -f gunicorn_config.py ]]; then
   cp gunicorn_config_example.py gunicorn_config.py
 fi
 
-gunicorn --config gunicorn_config.py --daemon app:app
+gunicorn -c gunicorn_config.py -D app:app
