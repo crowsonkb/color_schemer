@@ -63,6 +63,8 @@ def result():
             raise InternalServerError(str(err))
         inputs.append(rgb_src)
 
+    if not inputs:
+        raise InternalServerError('At least one valid color is required.')
     inputs_arr = np.stack(inputs)
     outputs_arr = translate_fn(inputs_arr)
 
