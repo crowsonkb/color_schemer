@@ -59,3 +59,20 @@ def JCh_to_sRGB(JCh, RGB_b, surround='average', epsilon=1e-6):
         surround = colour.appearance.ciecam02.CIECAM02_VIEWING_CONDITIONS[surround]
     XYZ = colour.CIECAM02_to_XYZ(J, C, h, XYZ_w, L_A, Y_b, surround, True) / 100
     return np.clip(colour.XYZ_to_sRGB(XYZ, apply_encoding_cctf=False), 0, 1)**(1 / 2.2)
+
+
+def translate(fg, bg_src, bg_dst, J_fac=1, C_fac=1):
+    """Returns a foreground color, intended for use on bg_dst, that appears like the given
+    foreground color on background bg_src.
+
+    Args:
+        fg: The foreground color sRGB value to translate.
+        bg_src: The source background sRGB value.
+        bg_dst: The destination background sRGB value.
+        J_fac: Scales output lightness by this factor.
+        C_fac: Scales output chroma by this factor.
+    """
+    JCh = sRGB_to_JCh(fg, bg_src)
+    JCh[0] *= J_fac
+    JCh[1] *= C_fac
+    return JCh_to_sRGB(JCh, bg_dst)
