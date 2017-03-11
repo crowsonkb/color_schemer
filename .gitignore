@@ -1,5 +1,6 @@
 __pycache__
 venv
 uwsgi.ini
+uwsgi.log
 
 templates/statcounter.html
