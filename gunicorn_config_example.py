@@ -12,6 +12,8 @@ workers = os.cpu_count()
 
 # Server mechanics
 pidfile = 'gunicorn.pid'
+if Path('/run/shm').exists():
+    worker_tmp_dir = '/run/shm'
 
 # Logging
 accesslog = 'log/access.log'
