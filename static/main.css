@@ -22,7 +22,7 @@ input[type="radio"], input[type="text"] {
     margin-bottom: 4px;
 }
 
-td {
+table.rjust td {
     text-align: right;
 }
 
