@@ -46,6 +46,8 @@ def result():
     for color in form['colors'].split('\n'):
         if len(outputs) == 256:
             break
+        if not color.strip():
+            continue
         try:
             rgb_src = parse_color(color)
         except ValueError as err:
