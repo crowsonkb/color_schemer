@@ -57,6 +57,14 @@ def index():
 @app.route('/result', methods=['POST'])
 def result():
     """Renders the result page."""
-    rgb_src = parse_color(flask.request.form['color'])
-    rgb_dst = cam.translate(rgb_src, [0.2]*3, [0.8]*3)
+    dark, light = [0.2]*3, [0.8]*3
+    form = flask.request.form
+    rgb_src = parse_color(form['color'])
+    J_factor, C_factor = float(form['J_factor']), float(form['C_factor'])
+    if form['direction'] == 'to_dark':
+        rgb_dst = cam.translate(rgb_src, light, dark, J_factor=J_factor, C_factor=C_factor)
+    elif form['direction'] == 'to_light':
+        rgb_dst = cam.translate(rgb_src, dark, light, J_factor=J_factor, C_factor=C_factor)
+    else:
+        raise ValueError('Translation direction not specified')
     return color_to_hex(rgb_dst)

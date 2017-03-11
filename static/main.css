@@ -2,14 +2,22 @@ body {
     background-color: rgb(123, 123, 123);  /* 20% gray */
     color: rgb(255, 255, 255);
     font-family: "SF UI Text", "Lucida Grande", Helvetica, Arial, sans-serif;
-    line-height: 1.25;
+    line-height: 1.15;
 }
 
 #content {
     margin: 16px;
 }
 
-input {
-    margin-top: 2px;
-    margin-bottom: 2px;
+input[type="number"] {
+    width: 4em;
+}
+
+input[type="radio"], input[type="text"] {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+td {
+    text-align: right;
 }
