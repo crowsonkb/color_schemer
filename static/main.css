@@ -6,29 +6,23 @@ body {
     background-color: rgb(123, 123, 123);  /* 20% gray */
     color: rgb(255, 255, 255);
     font-family: "SF UI Text", "Lucida Grande", Helvetica, Arial, sans-serif;
-    line-height: 1.15;
+    line-height: 1.2;
 }
 
-#content {
-    margin: 16px;
-}
+#content { margin: 16px; }
 
-input[type="number"] {
-    width: 4em;
-}
+input[type="number"] { width: 4em; }
 
 input[type="radio"], input[type="text"] {
     margin-top: 4px;
     margin-bottom: 4px;
 }
 
-table.rjust td {
-    text-align: right;
-}
+table.result td { text-align: center; }
 
-td.demo {
-    padding: 4px 24px;
-}
+table.rjust td { text-align: right; }
+
+td.demo { padding: 4px 24px; }
 
 textarea {
     font-family: SF Mono, Consolas, monospace;
