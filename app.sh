@@ -21,13 +21,11 @@ else
   source venv/bin/activate
 fi
 
-if [[ ! -d run ]]; then
-  mkdir -m 700 run
+mkdir -m 700 -p log
+
+echo "Starting Gunicorn..."
+if [[ ! -f gunicorn_config.py ]]; then
+  cp gunicorn_config_example.py gunicorn_config.py
 fi
 
-echo "Starting uWSGI..."
-if [[ ! -f uwsgi.ini ]]; then
-  cp uwsgi_example.ini uwsgi.ini
-fi
-
-exec uwsgi --ini uwsgi.ini "$@"
+gunicorn -c gunicorn_config.py app:app

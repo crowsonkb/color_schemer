@@ -1,4 +1,4 @@
 colour-science >= 0.3.8
 Flask >= 0.12
-uwsgi >= 2.0.14
-uwsgitop >= 0.10
+gunicorn >= 19.7.0
+setproctitle >= 1.1.10

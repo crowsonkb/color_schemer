@@ -1,6 +1,6 @@
 __pycache__
 venv
-run
-uwsgi.ini
-
+gunicorn_config.py
 templates/statcounter.html
+log
+*.pid*
