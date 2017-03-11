@@ -66,15 +66,14 @@ def result():
     inputs_arr = np.stack(inputs)
     outputs_arr = translate_fn(inputs_arr)
 
-    csv_url = 'data:text/csv,r_src,g_src,b_src,r_dst,g_dst,b_dst%0d%0a'
+    csv = 'r_src,g_src,b_src,r_dst,g_dst,b_dst\n'
     for i, color in enumerate(inputs_txt):
-        csv_url += '%d,%d,%d,' % color_to_int(inputs_arr[i])
-        csv_url += '%d,%d,%d%%0d%%0a' % color_to_int(outputs_arr[i])
+        csv += '%d,%d,%d,' % color_to_int(inputs_arr[i])
+        csv += '%d,%d,%d\n' % color_to_int(outputs_arr[i])
         if color.count(','):
             outputs_txt.append((color_to_decimal(inputs_arr[i]), color_to_decimal(outputs_arr[i])))
         else:
             outputs_txt.append((color_to_hex(inputs_arr[i]), color_to_hex(outputs_arr[i])))
 
     return flask.render_template('result.html',
-                                 left_bg=left_bg, right_bg=right_bg, outputs=outputs_txt,
-                                 csv_url=csv_url)
+                                 left_bg=left_bg, right_bg=right_bg, outputs=outputs_txt, csv=csv)

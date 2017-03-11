@@ -18,6 +18,6 @@
                     <span style="color: {{output[1]}};">Test</span>
         {% endfor %}
     </table><br>
-    <a href="{{csv_url}}">Download as CSV</a><br>
+    <a href="data:text/csv,{{csv | urlencode}}">Download as CSV</a><br>
     <a href="javascript:window.history.back();">Back</a>
 {% endblock %}
