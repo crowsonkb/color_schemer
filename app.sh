@@ -26,6 +26,4 @@ if [[ ! -f uwsgi.ini ]]; then
   cp uwsgi_example.ini uwsgi.ini
 fi
 
-set +e
 uwsgi --ini uwsgi.ini "$@"
-rm -f uwsgi.fifo uwsgi.pid
