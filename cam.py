@@ -57,8 +57,14 @@ def JCh_to_sRGB(JCh, RGB_b, surround='average', epsilon=1e-6):
     Y_b = colour.sRGB_to_XYZ(RGB_b_linear, apply_decoding_cctf=False)[1] * 100
     if isinstance(surround, str):
         surround = colour.appearance.ciecam02.CIECAM02_VIEWING_CONDITIONS[surround]
-    XYZ = colour.CIECAM02_to_XYZ(J, C, h, XYZ_w, L_A, Y_b, surround, True) / 100
-    return np.clip(colour.XYZ_to_sRGB(XYZ, apply_encoding_cctf=False), 0, 1)**(1 / 2.2)
+    for _ in range(100):  # limit the number of iterations
+        XYZ = colour.CIECAM02_to_XYZ(J, C, h, XYZ_w, L_A, Y_b, surround, True) / 100
+        RGB = colour.XYZ_to_sRGB(XYZ, apply_encoding_cctf=False)
+        out_of_gamut = ((RGB < epsilon) + (RGB > 1)).any(axis=1)
+        if out_of_gamut.any():
+            C[out_of_gamut] *= 0.95
+        else:
+            return np.clip(RGB, epsilon, 1)**(1 / 2.2)
 
 
 def translate(fg, bg_src, bg_dst, J_factor=1, C_factor=1):
