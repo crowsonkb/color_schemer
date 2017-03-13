@@ -24,7 +24,10 @@ table.result td { text-align: center; }
 
 table.rjust td { text-align: right; }
 
-td.demo { padding: 4px 24px; }
+td.demo {
+    font-weight: 500;
+    padding: 4px 24px;
+}
 
 textarea {
     font-family: SF Mono, Consolas, monospace;
