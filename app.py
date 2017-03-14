@@ -18,6 +18,7 @@ app = flask.Flask(__name__)
 @app.errorhandler(429)
 @app.errorhandler(500)
 def handle_error(err):
+    """Renders an error page in the site style."""
     if isinstance(err, HTTPException):
         code, desc = err.code, err.description
     else:
