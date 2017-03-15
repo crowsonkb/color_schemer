@@ -6,8 +6,29 @@ piecewise sRGB transfer function but goes with the most common actual implementa
 display hardware.
 """
 
+from functools import partial
+
 import colour
 import numpy as np
+from scipy import optimize
+
+
+def delta_e(RGB_1, RGB_2):
+    """Returns the CIEDE2000 difference between RGB_1 and RGB_2 (both sRGB with range 0-1).
+    Reference: https://en.wikipedia.org/wiki/Color_difference#CIEDE2000."""
+    Lab_1 = colour.XYZ_to_Lab(colour.sRGB_to_XYZ(RGB_1))
+    Lab_2 = colour.XYZ_to_Lab(colour.sRGB_to_XYZ(RGB_2))
+    return colour.delta_E_CIE2000(Lab_1, Lab_2)
+
+
+def gamut_map(RGB):
+    """Finds the nearest in-gamut color to an out-of-gamut color."""
+    x = np.clip(RGB, 0, 1)
+    if (RGB == x).all():
+        return x
+    loss = partial(delta_e, RGB)
+    x, _, _ = optimize.fmin_l_bfgs_b(loss, x, approx_grad=True, bounds=[(0, 1)]*3)
+    return x
 
 
 def sRGB_to_JCh(RGB, RGB_b, surround='average', epsilon=1e-6):
@@ -57,14 +78,13 @@ def JCh_to_sRGB(JCh, RGB_b, surround='average', epsilon=1e-6):
     Y_b = colour.sRGB_to_XYZ(RGB_b_linear, apply_decoding_cctf=False)[1] * 100
     if isinstance(surround, str):
         surround = colour.appearance.ciecam02.CIECAM02_VIEWING_CONDITIONS[surround]
-    for _ in range(100):  # limit the number of iterations
-        XYZ = colour.CIECAM02_to_XYZ(J, C, h, XYZ_w, L_A, Y_b, surround, True) / 100
-        RGB = colour.XYZ_to_sRGB(XYZ, apply_encoding_cctf=False)
-        out_of_gamut = ((RGB < epsilon) + (RGB > 1)).any(axis=1)
-        if out_of_gamut.any():
-            C[out_of_gamut] *= 0.95
-        else:
-            return np.clip(RGB, epsilon, 1)**(1 / 2.2)
+    XYZ = colour.CIECAM02_to_XYZ(J, C, h, XYZ_w, L_A, Y_b, surround, True) / 100
+    RGB_linear = colour.XYZ_to_sRGB(XYZ, apply_encoding_cctf=False)
+    RGB = np.sign(RGB_linear) * abs(RGB_linear)**(1 / 2.2)
+    RGB_in_gamut = np.zeros_like(RGB)
+    for i, rgb in enumerate(RGB):
+        RGB_in_gamut[i, :] = gamut_map(rgb)
+    return RGB_in_gamut
 
 
 def translate(fg, bg_src, bg_dst, J_factor=1, C_factor=1):
