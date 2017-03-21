@@ -73,6 +73,9 @@ def translate(fg, bg_src, bg_dst, J_factor=1, C_factor=1):
         bg_dst: The destination background sRGB value.
         J_factor: Scales output lightness by this factor.
         C_factor: Scales output chroma by this factor.
+
+    Returns:
+        The converted foreground color in sRGB space.
     """
     JCh = sRGB_to_JCh(fg, bg_src)
     JCh[0] *= J_factor
