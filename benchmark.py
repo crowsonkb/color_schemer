@@ -3,6 +3,7 @@
 """Benchmarks app.py and its HTTP server."""
 
 from concurrent.futures import ThreadPoolExecutor
+import os
 import sys
 import time
 
@@ -39,7 +40,7 @@ def main():
         _ = r.text
 
     diffs = []
-    with ThreadPoolExecutor(max_workers=10) as ex:
+    with ThreadPoolExecutor(max_workers=os.cpu_count()) as ex:
         futs = [ex.submit(get_result) for _ in range(10)]
         for fut in futs:
             diffs.extend(fut.result())
