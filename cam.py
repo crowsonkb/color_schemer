@@ -69,8 +69,8 @@ def sRGB_to_JCh(RGB, RGB_b, surround='average'):
 def JCh_to_sRGB(JCh, RGB_b, surround='average'):
     """Converts a CIECAM02 JCh (lightness/chroma/hue) foreground color to sRGB.
 
-    Input and output sRGB values are nonlinear and range from 0 to 1. This routine will clamp
-    output RGB values to (0, 1] rather than generate an out-of-gamut color.
+    Input and output sRGB values are nonlinear and range from 0 to 1. This routine will perform
+    gamut mapping on out-of-gamut sRGB values.
 
     Args:
         JCh: The foreground color JCh value. Can come from sRGB_to_JCh().
