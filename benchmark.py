@@ -12,7 +12,16 @@ import requests
 
 
 def timeit(run_for=1):
-    def call(fn):
+    """A function decorator for benchmarking.
+
+    Causes the decorated function to return a NumPy ndarray where each element is the time taken
+    by a single run of the function. The returned array can be further processed with np.mean(),
+    np.median(), np.percentile(), etc.
+
+    Args:
+        run_for (float): The minimum time, in seconds, to run the wrapped function repeatedly for.
+    """
+    def decorator(fn):
         def record_times(*args, **kwargs):
             times = [time.perf_counter()]
             while times[-1] - times[0] < run_for:
@@ -20,7 +29,7 @@ def timeit(run_for=1):
                 times.append(time.perf_counter())
             return np.diff(times)
         return record_times
-    return call
+    return decorator
 
 
 def main():
