@@ -30,7 +30,7 @@ td.demo {
 }
 
 textarea {
-    font-family: "SF Mono", Menlo, Consolas, monospace;
-    font-size: 80%;
+    font-family: Menlo, Consolas, monospace;
+    font-size: 12px;
     line-height: 1.4;
 }
