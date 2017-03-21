@@ -6,6 +6,7 @@ body {
     background-color: rgb(123, 123, 123);  /* 20% gray */
     color: rgb(255, 255, 255);
     font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Lucida Grande", Arial, sans-serif;
+    font-size: 16px;
     line-height: 1.2;
 }
 
