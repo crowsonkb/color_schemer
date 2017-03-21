@@ -2,5 +2,6 @@ colour-science >= 0.3.8
 Flask >= 0.12
 numpy >= 1.12.0
 requests >= 2.13.0
+scipy >= 0.19.0
 uwsgi >= 2.0.14
 uwsgitop >= 0.10
