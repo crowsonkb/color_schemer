@@ -5,7 +5,7 @@ a:link, a:visited, a:hover, a:active {
 body {
     background-color: rgb(123, 123, 123);  /* 20% gray */
     color: rgb(255, 255, 255);
-    font-family: "SF UI Text", "Lucida Grande", Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Lucida Grande", Arial, sans-serif;
     line-height: 1.2;
 }
 
@@ -30,7 +30,7 @@ td.demo {
 }
 
 textarea {
-    font-family: SF Mono, Consolas, monospace;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
     font-size: 80%;
     line-height: 1.4;
 }
