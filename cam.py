@@ -20,7 +20,7 @@ def sRGB_to_XYZ(RGB):
         RGB (array_like): The sRGB color.
 
     Returns:
-        np.ndarray: The XYZ color.
+        ndarray: The XYZ color.
     """
     RGB = np.array(RGB)
     RGB_linear = np.sign(RGB) * abs(RGB)**2.2
@@ -34,7 +34,7 @@ def XYZ_to_sRGB(XYZ):
         XYZ (array_like): The XYZ color.
 
     Returns:
-        np.ndarray: The sRGB color.
+        ndarray: The sRGB color.
     """
     XYZ = np.array(XYZ)
     RGB_linear = colour.XYZ_to_sRGB(XYZ, apply_encoding_cctf=False)
@@ -45,8 +45,8 @@ def distance(RGB_1, RGB_2):
     """Returns the squared distance between two sRGB colors.
 
     Args:
-        RGB_1 (np.ndarray): The first color.
-        RGB_2 (np.ndarray): The second color.
+        RGB_1 (ndarray): The first color.
+        RGB_2 (ndarray): The second color.
 
     Returns:
         float: The squared distance between the two colors.
@@ -60,10 +60,10 @@ def gamut_map(RGB):
     """Finds the nearest in-gamut color to an out-of-gamut color.
 
     Args:
-        RGB (np.ndarray): The input RGB color.
+        RGB (ndarray): The input RGB color.
 
     Returns:
-        np.ndarray: The gamut-mapped RGB color.
+        ndarray: The gamut-mapped RGB color.
     """
     x = np.clip(RGB, 0, 1)
     if (RGB == x).all():
@@ -84,7 +84,7 @@ def sRGB_to_JCh(RGB, RGB_b, surround='average'):
         surround (str): The CIECAM02 viewing conditions.
 
     Returns:
-        np.ndarray: The converted foreground color in JCh space.
+        ndarray: The converted foreground color in JCh space.
     """
     XYZ = sRGB_to_XYZ(RGB) * 100
     XYZ_w = sRGB_to_XYZ([1, 1, 1]) * 100
@@ -107,7 +107,7 @@ def JCh_to_sRGB(JCh, RGB_b, surround='average'):
         surround (str): The CIECAM02 viewing conditions.
 
     Returns:
-        np.ndarray: The converted foreground color in sRGB space.
+        ndarray: The converted foreground color in sRGB space.
     """
     J, C, h = JCh
     XYZ_w = sRGB_to_XYZ([1, 1, 1]) * 100
@@ -137,7 +137,7 @@ def translate(fg, bg_src, bg_dst, J_factor=1, C_factor=1):
         C_factor (float): Scales output chroma by this factor.
 
     Returns:
-        np.ndarray: The converted foreground color in sRGB space.
+        ndarray: The converted foreground color in sRGB space.
     """
     JCh = sRGB_to_JCh(fg, bg_src)
     JCh[0] *= J_factor
