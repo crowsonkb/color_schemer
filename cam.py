@@ -117,6 +117,8 @@ def JCh_to_sRGB(JCh, RGB_b, surround='average'):
         surround = colour.appearance.ciecam02.CIECAM02_VIEWING_CONDITIONS[surround]
     XYZ = colour.CIECAM02_to_XYZ(J, C, h, XYZ_w, L_A, Y_b, surround, True) / 100
     RGB = XYZ_to_sRGB(XYZ)
+    if RGB.ndim == 1:
+        return gamut_map(RGB)
     RGB_in_gamut = np.zeros_like(RGB)
     for i, rgb in enumerate(RGB):
         RGB_in_gamut[i, :] = gamut_map(rgb)
