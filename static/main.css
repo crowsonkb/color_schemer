@@ -23,6 +23,8 @@ input[type="submit"] { padding: 3.5px 7px; }
 
 table.result td { text-align: center; }
 
+table.result td.demo { padding: 4px; }
+
 table.rjust td { text-align: right; }
 
 td.demo {

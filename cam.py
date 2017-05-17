@@ -1,145 +1,96 @@
-"""Converts between the sRGB and CIECAM02 JCh (lightness/chroma/hue) color spaces.
+"""Converts between the web and CAM02-UCS color spaces."""
 
-See https://en.wikipedia.org/wiki/SRGB and https://en.wikipedia.org/wiki/CIECAM02. 'sRGB' here is
-defined as an RGB color space with the sRGB primaries and gamma 2.2 - i.e. it does not use the
-piecewise sRGB transfer function but goes with the most common actual implementation of sRGB in
-display hardware.
-"""
-
+from collections import namedtuple
 from functools import partial
 
 import colour
+from colour.utilities import tsplit, tstack
 import numpy as np
-from scipy import optimize
+from scipy.optimize import fmin_l_bfgs_b
+
+Conditions = namedtuple('Conditions', 'Y_w L_A Y_b surround')
+DARK_BG = Conditions(80, 16, 0.8, colour.CIECAM02_VIEWING_CONDITIONS['Average'])
+NEUTRAL_BG = Conditions(80, 16, 16, colour.CIECAM02_VIEWING_CONDITIONS['Average'])
+LIGHT_BG = Conditions(80, 16, 80, colour.CIECAM02_VIEWING_CONDITIONS['Average'])
 
 
-def sRGB_to_XYZ(RGB):
-    """Converts an sRGB color (nonlinear, range 0-1) to XYZ using a gamma=2.2 transfer function.
-
-    Args:
-        RGB (array_like): The sRGB color.
-
-    Returns:
-        ndarray: The XYZ color.
-    """
-    RGB = np.array(RGB)
-    RGB_linear = np.sign(RGB) * abs(RGB)**2.2
-    return colour.sRGB_to_XYZ(RGB_linear, apply_decoding_cctf=False)
+def apow(x, power):
+    """Raises x to the given power, treating negative numbers in a mirrored fashion."""
+    return np.abs(x)**power * np.sign(x)
 
 
-def XYZ_to_sRGB(XYZ):
-    """Converts an XYZ color to sRGB (nonlinear, range 0-1) using a gamma=2.2 transfer function.
-
-    Args:
-        XYZ (array_like): The XYZ color.
-
-    Returns:
-        ndarray: The sRGB color.
-    """
-    XYZ = np.array(XYZ)
-    RGB_linear = colour.XYZ_to_sRGB(XYZ, apply_encoding_cctf=False)
-    return np.sign(RGB_linear) * abs(RGB_linear)**(1/2.2)
+WEB_CS = colour.RGB_Colourspace('web',
+                                colour.sRGB_COLOURSPACE.primaries,
+                                colour.sRGB_COLOURSPACE.whitepoint,
+                                encoding_cctf=partial(apow, power=1/2.2),
+                                decoding_cctf=partial(apow, power=2.2),
+                                use_derived_RGB_to_XYZ_matrix=True,
+                                use_derived_XYZ_to_RGB_matrix=True)
 
 
-def distance(RGB_1, RGB_2):
-    """Returns the squared distance between two sRGB colors.
-
-    Args:
-        RGB_1 (ndarray): The first color.
-        RGB_2 (ndarray): The second color.
-
-    Returns:
-        float: The squared distance between the two colors.
-    """
-    IPT_1 = colour.XYZ_to_IPT(sRGB_to_XYZ(RGB_1))
-    IPT_2 = colour.XYZ_to_IPT(sRGB_to_XYZ(RGB_2))
-    return np.sum(np.square(IPT_1 - IPT_2))
+def web_to_XYZ(RGB):
+    """Converts from the web colorspace to XYZ tristimulus values."""
+    return colour.RGB_to_XYZ(RGB, WEB_CS.whitepoint, WEB_CS.whitepoint,
+                             WEB_CS.RGB_to_XYZ_matrix, decoding_cctf=WEB_CS.decoding_cctf)
 
 
-def gamut_map(RGB):
-    """Finds the nearest in-gamut color to an out-of-gamut color.
+def XYZ_to_web(XYZ):
+    """Converts from XYZ tristimulus values to the web colorspace."""
+    return colour.XYZ_to_RGB(XYZ, WEB_CS.whitepoint, WEB_CS.whitepoint,
+                             WEB_CS.XYZ_to_RGB_matrix, encoding_cctf=WEB_CS.encoding_cctf)
 
-    Args:
-        RGB (ndarray): The input RGB color.
 
-    Returns:
-        ndarray: The gamut-mapped RGB color.
-    """
-    x = np.clip(RGB, 0, 1)
-    if (RGB == x).all():
+def web_to_ucs(RGB, conds):
+    """Converts from the web colorspace to CAM02-UCS."""
+    XYZ = web_to_XYZ(RGB)
+    XYZ_w = web_to_XYZ([1, 1, 1])
+    Y_w, L_A, Y_b, surround = conds
+    cam02 = colour.XYZ_to_CIECAM02(XYZ * Y_w, XYZ_w * Y_w, L_A, Y_b, surround,
+                                   discount_illuminant=True)
+    JMh = tstack([cam02.J, cam02.M, cam02.h])
+    return colour.models.JMh_CIECAM02_to_CAM02UCS(JMh)
+
+
+def ucs_to_web(Jab, conds):
+    """Converts from CAM02-UCS to the web colorspace."""
+    JMh = colour.models.CAM02UCS_to_JMh_CIECAM02(Jab)
+    XYZ_w = web_to_XYZ([1, 1, 1])
+    Y_w, L_A, Y_b, surround = conds
+    XYZ = colour.CIECAM02_to_XYZ(*tsplit(JMh), XYZ_w * Y_w, L_A, Y_b, surround,
+                                 discount_illuminant=True, input_correlates='JMh') / Y_w
+    return XYZ_to_web(XYZ)
+
+
+def constrain_to_gamut(rgb, conds):
+    """Constrains the given web colorspace color to lie within the web colorspace gamut,
+    minimizing the CAM02-UCS distance between the input out-of-gamut color and the output in-gamut
+    color."""
+    x = np.clip(rgb, 0, 1)
+    if (rgb == x).all():
         return x
-    loss = partial(distance, RGB)
-    x_opt, _, _ = optimize.fmin_l_bfgs_b(loss, x, approx_grad=True, bounds=[(0, 1)]*3)
+    Jab = web_to_ucs(rgb, conds)
+    def loss(rgb_):
+        return np.sum(np.square(Jab - web_to_ucs(rgb_, conds)))
+    x_opt, _, _ = fmin_l_bfgs_b(loss, x, approx_grad=True, bounds=[(0, 1)]*3)
     return x_opt
 
 
-def sRGB_to_JCh(RGB, RGB_b, surround='average'):
-    """Converts an sRGB foreground color to CIECAM02 JCh (lightness/chroma/hue).
-
-    Input sRGB values are nonlinear and range from 0 to 1.
-
-    Args:
-        RGB (array_like): The foreground color sRGB value.
-        RGB_b (array_like): The background color sRGB value.
-        surround (str): The CIECAM02 viewing conditions.
-
-    Returns:
-        ndarray: The converted foreground color in JCh space.
-    """
-    XYZ = sRGB_to_XYZ(RGB) * 100
-    XYZ_w = sRGB_to_XYZ([1, 1, 1]) * 100
-    L_A = 20
-    Y_b = sRGB_to_XYZ(RGB_b)[1] * 100
-    if isinstance(surround, str):
-        surround = colour.appearance.ciecam02.CIECAM02_VIEWING_CONDITIONS[surround]
-    return np.float64(colour.XYZ_to_CIECAM02(XYZ, XYZ_w, L_A, Y_b, surround, True)[:3])
-
-
-def JCh_to_sRGB(JCh, RGB_b, surround='average'):
-    """Converts a CIECAM02 JCh (lightness/chroma/hue) foreground color to sRGB.
-
-    Input and output sRGB values are nonlinear and range from 0 to 1. This routine will perform
-    gamut mapping on out-of-gamut sRGB values.
+def translate(fg, cond_src, cond_dst, J_factor=1, M_factor=1):
+    """Returns a foreground color, intended for use under viewing conditions cond_dst, that appears
+    like the given foreground color under viewing conditions cond_src.
 
     Args:
-        JCh (array_like): The foreground color JCh value. Can come from sRGB_to_JCh().
-        RGB_b (array_like): The background color sRGB value.
-        surround (str): The CIECAM02 viewing conditions.
-
-    Returns:
-        ndarray: The converted foreground color in sRGB space.
-    """
-    J, C, h = JCh
-    XYZ_w = sRGB_to_XYZ([1, 1, 1]) * 100
-    L_A = 20
-    Y_b = sRGB_to_XYZ(RGB_b)[1] * 100
-    if isinstance(surround, str):
-        surround = colour.appearance.ciecam02.CIECAM02_VIEWING_CONDITIONS[surround]
-    XYZ = colour.CIECAM02_to_XYZ(J, C, h, XYZ_w, L_A, Y_b, surround, True) / 100
-    RGB = XYZ_to_sRGB(XYZ)
-    if RGB.ndim == 1:
-        return gamut_map(RGB)
-    RGB_in_gamut = np.zeros_like(RGB)
-    for i, rgb in enumerate(RGB):
-        RGB_in_gamut[i, :] = gamut_map(rgb)
-    return RGB_in_gamut
-
-
-def translate(fg, bg_src, bg_dst, J_factor=1, C_factor=1):
-    """Returns a foreground color, intended for use on bg_dst, that appears like the given
-    foreground color on background bg_src.
-
-    Args:
-        fg (array_like): The foreground color sRGB value to translate.
-        bg_src (array_like): The source background sRGB value.
-        bg_dst (array_like): The destination background sRGB value.
+        fg (array_like): The foreground color sRGB values to translate.
+        cond_src (array_like): The source viewing conditions.
+        cond_dst (array_like): The destination viewing conditions.
         J_factor (float): Scales output lightness by this factor.
-        C_factor (float): Scales output chroma by this factor.
+        M_factor (float): Scales output colourfulness by this factor.
 
     Returns:
         ndarray: The converted foreground color in sRGB space.
     """
-    JCh = sRGB_to_JCh(fg, bg_src)
-    JCh[0] *= J_factor
-    JCh[1] *= C_factor
-    return JCh_to_sRGB(JCh, bg_dst)
+    Jab = web_to_ucs(fg, cond_src)
+    Jab[0] *= J_factor
+    Jab[1:] *= M_factor
+    rgb = ucs_to_web(Jab, cond_dst)
+    return np.asarray([constrain_to_gamut(color, cond_dst) for color in rgb])

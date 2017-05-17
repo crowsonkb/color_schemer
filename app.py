@@ -36,20 +36,19 @@ def index():
 @app.route('/result', methods=['POST'])
 def result():
     """Renders the result page."""
-    dark, light = [0.2]*3, [0.8]*3
     form = flask.request.form
 
-    J_factor, C_factor = float(form['J_factor']), float(form['C_factor'])
+    J_factor, M_factor = float(form['J_factor']), float(form['M_factor'])
 
     if form['direction'] == 'to_dark':
-        translate_fn = partial(cam.translate, bg_src=light, bg_dst=dark)
+        translate_fn = partial(cam.translate, cond_src=cam.LIGHT_BG, cond_dst=cam.DARK_BG)
         left_bg, right_bg = '#fff', '#000'
     elif form['direction'] == 'to_light':
-        translate_fn = partial(cam.translate, bg_src=dark, bg_dst=light)
+        translate_fn = partial(cam.translate, cond_src=cam.DARK_BG, cond_dst=cam.LIGHT_BG)
         left_bg, right_bg = '#000', '#fff'
     else:
         raise InternalServerError('Translation direction not specified.')
-    translate_fn = partial(translate_fn, J_factor=J_factor, C_factor=C_factor)
+    translate_fn = partial(translate_fn, J_factor=J_factor, M_factor=M_factor)
 
     inputs_txt, inputs, outputs_txt = [], [], []
     for color in form['colors'].split('\n'):
@@ -67,7 +66,7 @@ def result():
     if not inputs:
         raise InternalServerError('At least one valid color is required.')
     inputs_arr = np.stack(inputs)
-    outputs_arr = translate_fn(inputs_arr)
+    outputs_arr = np.atleast_2d(translate_fn(inputs_arr))
 
     dump = ''
     csv = 'r_src,g_src,b_src,r_dst,g_dst,b_dst\n'
