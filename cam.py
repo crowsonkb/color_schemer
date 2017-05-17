@@ -80,14 +80,14 @@ def translate(fg, cond_src, cond_dst, J_factor=1, M_factor=1):
     like the given foreground color under viewing conditions cond_src.
 
     Args:
-        fg (array_like): The foreground color sRGB values to translate.
+        fg (array_like): The foreground color web colorspace values to translate.
         cond_src (array_like): The source viewing conditions.
         cond_dst (array_like): The destination viewing conditions.
         J_factor (float): Scales output lightness by this factor.
         M_factor (float): Scales output colourfulness by this factor.
 
     Returns:
-        ndarray: The converted foreground color in sRGB space.
+        ndarray: The converted foreground color in the web colorspace.
     """
     Jab = web_to_ucs(fg, cond_src)
     Jab[0] *= J_factor
