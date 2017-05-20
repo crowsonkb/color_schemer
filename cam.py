@@ -89,7 +89,7 @@ def translate(fg, cond_src, cond_dst, J_factor=1, M_factor=1):
         ndarray: The converted foreground color in the web colorspace.
     """
     Jab = web_to_ucs(fg, cond_src)
-    Jab[0] *= J_factor
-    Jab[1:] *= M_factor
+    Jab[..., 0] *= J_factor
+    Jab[..., 1:] *= M_factor
     rgb = ucs_to_web(Jab, cond_dst)
     return np.asarray([constrain_to_gamut(color, cond_dst) for color in rgb])
