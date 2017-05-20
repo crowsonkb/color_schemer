@@ -45,8 +45,7 @@ def web_to_ucs(RGB, conds):
     XYZ = web_to_XYZ(RGB)
     XYZ_w = web_to_XYZ([1, 1, 1])
     Y_w, L_A, Y_b, surround = conds
-    cam02 = colour.XYZ_to_CIECAM02(XYZ * Y_w, XYZ_w * Y_w, L_A, Y_b, surround,
-                                   discount_illuminant=True)
+    cam02 = colour.XYZ_to_CIECAM02(XYZ * Y_w, XYZ_w * Y_w, L_A, Y_b, surround)
     JMh = tstack([cam02.J, cam02.M, cam02.h])
     return colour.models.JMh_CIECAM02_to_CAM02UCS(JMh)
 
@@ -57,7 +56,7 @@ def ucs_to_web(Jab, conds):
     XYZ_w = web_to_XYZ([1, 1, 1])
     Y_w, L_A, Y_b, surround = conds
     XYZ = colour.CIECAM02_to_XYZ(*tsplit(JMh), XYZ_w * Y_w, L_A, Y_b, surround,
-                                 discount_illuminant=True, input_correlates='JMh') / Y_w
+                                 input_correlates='JMh') / Y_w
     return XYZ_to_web(XYZ)
 
 
