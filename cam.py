@@ -14,6 +14,16 @@ NEUTRAL_BG = Conditions(80, 16, 16, colour.CIECAM02_VIEWING_CONDITIONS['Average'
 LIGHT_BG = Conditions(80, 16, 80, colour.CIECAM02_VIEWING_CONDITIONS['Average'])
 
 
+def get_conds(bg='neutral'):
+    """Retrieves a set of CIECAM02 conditions."""
+    bg = bg.lower()
+    if bg == 'dark':
+        return DARK_BG
+    if bg == 'light':
+        return LIGHT_BG
+    return NEUTRAL_BG
+
+
 def apow(x, power):
     """Raises x to the given power, treating negative numbers in a mirrored fashion."""
     return np.abs(x)**power * np.sign(x)
